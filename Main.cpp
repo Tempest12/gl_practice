@@ -13,6 +13,8 @@
 
 #include "Main.hpp"
 
+// Uses basica shader to draw a box.  Also draws some grid lines.
+
 // Shader stuff:
 unsigned int vertexShaderId       = 0;
 unsigned int fragmentShaderId     = 0;
