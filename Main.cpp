@@ -13,6 +13,8 @@
 
 #include "Main.hpp"
 
+//Testing branching.
+
 // Shader stuff:
 unsigned int vertexShaderId       = 0;
 unsigned int fragmentShaderId     = 0;
