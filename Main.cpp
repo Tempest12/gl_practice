@@ -18,18 +18,10 @@ unsigned int vertexShaderId       = 0;
 unsigned int fragmentShaderId     = 0;
 unsigned int programId            = 0;
 
-unsigned int lineVertexShaderId   = 0;
-unsigned int lineFragmentShaderId = 0;
-unsigned int lineProgramId        = 0;
-
 // Buffers:
 unsigned int vboID                = 0;
 unsigned int vaoID                = 0;
 unsigned int indexBufferId        = 0;
-
-unsigned int lineVboID            = 0;
-unsigned int lineVaoID            = 0;
-unsigned int lineIndexBufferID    = 0;
 
 // Texture stuff:
 unsigned int textureId            = 0;
@@ -62,33 +54,6 @@ std::string fragmentShaderSource =
 "void main()\n"\
 "{\n"\
 "   color = texture(textureOne, texCoord);\n"\
-"}\n";
-
-std::string lineVertexShaderSource =
-"#version 330 core\n"\
-""\
-"layout (location = 0) in vec3 position;\n"\
-"layout (location = 1) in vec3 colorIn;\n"\
-""\
-"out vec3 color;\n"
-""\
-"void main()\n"\
-"{\n"\
-"    gl_Position = vec4(position.x  , position.y  , position.z, 1.0f);\n"\
-"    color       = colorIn;\n"\
-"}\n";
-
-std::string lineFragmentShaderSource =
-"#version 330 core\n"\
-""\
-"in vec3 color;\n"\
-""\
-"out vec4 colorOut;\n"\
-""\
-"void main()\n"\
-"{\n"\
-"   colorOut = vec4(color.r, color.g, color.b, 1.0f);\n"\
-"   //colorOut = vec4(1.0f, 0.0f, 1.0f, 1.0f);\n"\
 "}\n";
 
 int main(int argc, char** argv)
@@ -189,14 +154,6 @@ void draw(void)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);
     glUseProgram(0);
-
-    // Lines:
-    glUseProgram(lineProgramId);
-    glBindVertexArray(lineVaoID);
-    glDrawElements(GL_LINES, 32, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
-    glUseProgram(0);
-
 }
 
 unsigned int linkProgram(unsigned int vertId, unsigned int fragId)
@@ -296,72 +253,6 @@ void initBuffers(void)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
-    float lineVertices[] =
-    {
-        //Positions:      //Colors:
-         0.25f,  0.125f,    1.0f, 1.0f, 1.0f,
-         0.25f, -0.125f,    1.0f, 1.0f, 1.0f,
-         0.5f ,  0.125f,    1.0f, 1.0f, 1.0f,
-         0.5f , -0.125f,    1.0f, 1.0f, 1.0f,
-         0.75f,  0.125f,    1.0f, 1.0f, 1.0f,
-         0.75f, -0.125f,    1.0f, 1.0f, 1.0f,
-         1.00f,  0.125f,    1.0f, 1.0f, 1.0f,
-         1.00f, -0.125f,    1.0f, 1.0f, 1.0f,
-
-        -0.25f,  0.125f,    0.0f, 0.0f, 0.0f,
-        -0.25f, -0.125f,    0.0f, 0.0f, 0.0f,
-        -0.50f,  0.125f,    0.0f, 0.0f, 0.0f,
-        -0.50f, -0.125f,    0.0f, 0.0f, 0.0f,
-        -0.75f,  0.125f,    0.0f, 0.0f, 0.0f,
-        -0.75f, -0.125f,    0.0f, 0.0f, 0.0f,
-        -1.00f,  0.125f,    0.0f, 0.0f, 0.0f,
-        -1.00f, -0.125f,    0.0f, 0.0f, 0.0f,
-
-         0.125f,  0.25f,    0.0f, 1.0f, 0.0f,
-        -0.125f,  0.25f,    0.0f, 1.0f, 0.0f,
-         0.125f,  0.50f,    0.0f, 1.0f, 0.0f,
-        -0.125f,  0.50f,    0.0f, 1.0f, 0.0f,
-         0.125f,  0.75f,    0.0f, 1.0f, 0.0f,
-        -0.125f,  0.75f,    0.0f, 1.0f, 0.0f,
-         0.125f,  1.00f,    0.0f, 1.0f, 0.0f,
-        -0.125f,  1.00f,    0.0f, 1.0f, 0.0f,
-
-         0.125f, -0.25f,    1.0f, 1.0f, 0.0f,
-        -0.125f, -0.25f,    1.0f, 1.0f, 0.0f,
-         0.125f, -0.50f,    1.0f, 1.0f, 0.0f,
-        -0.125f, -0.50f,    1.0f, 1.0f, 0.0f,
-         0.125f, -0.75f,    1.0f, 1.0f, 0.0f,
-        -0.125f, -0.75f,    1.0f, 1.0f, 0.0f,
-         0.125f, -1.00f,    1.0f, 1.0f, 0.0f,
-        -0.125f, -1.00f,    1.0f, 1.0f, 0.0f,
-    };
-
-    unsigned int lineIndexBuffer[32];
-    for(unsigned int index = 0; index < 32; index++)
-    {
-        lineIndexBuffer[index] = index;
-    }
-
-    glGenVertexArrays(1, &lineVaoID);
-    glGenBuffers(1, &lineVboID);
-    glGenBuffers(1, &lineIndexBufferID);
-    glBindVertexArray(lineVaoID);
-
-    glBindBuffer(GL_ARRAY_BUFFER, lineVboID);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(lineVertices), lineVertices, GL_STATIC_DRAW);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, lineIndexBufferID);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(lineIndexBuffer), lineIndexBuffer, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(2 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
 }
 
 void initShader(void)
@@ -372,13 +263,6 @@ void initShader(void)
 
     glDeleteShader(vertexShaderId);
     glDeleteShader(fragmentShaderId);
-
-    lineVertexShaderId   = compileShader(&lineVertexShaderSource  , GL_VERTEX_SHADER);
-    lineFragmentShaderId = compileShader(&lineFragmentShaderSource, GL_FRAGMENT_SHADER);
-    lineProgramId        = linkProgram(lineVertexShaderId, lineFragmentShaderId);
-
-    glDeleteShader(lineVertexShaderId);
-    glDeleteShader(lineFragmentShaderId);
 }
 
 void initTexture(void)
