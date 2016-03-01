@@ -13,6 +13,11 @@
 
 #include "Main.hpp"
 
+unsigned int windowWidth  = 800;
+unsigned int windowHeight = 600;
+
+const glm::mat4 identityMatrix = glm::mat4();
+
 // Shader stuff:
 unsigned int vertexShaderId       = 0;
 unsigned int fragmentShaderId     = 0;
@@ -34,11 +39,13 @@ std::string vertexShaderSource =
 ""\
 "out vec2 texCoord;\n"
 ""\
-"uniform mat4 transformation;\n"\
+"uniform mat4 model;\n"\
+"uniform mat4 view;\n"\
+"uniform mat4 projection;\n"\
 ""\
 "void main()\n"\
 "{\n"\
-"    gl_Position = transformation * vec4(position.x  , position.y  , position.z, 1.0f);\n"\
+"    gl_Position = projection * view * model * vec4(position.x  , position.y  , position.z, 1.0f);\n"\
 "    texCoord    = vec2(texCoordIn.x, texCoordIn.y);\n"\
 "}\n";
 
@@ -66,7 +73,7 @@ int main(int argc, char** argv)
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, false);
 
-    GLFWwindow* window = glfwCreateWindow(800, 600, "gl", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(windowWidth, windowHeight, "gl", NULL, NULL);
     if(window == NULL)
     {
         std::cout << "Couldn't create window." << std::endl;
@@ -132,19 +139,17 @@ void draw(void)
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(programId);
 
-    int transformationLocation = glGetUniformLocation(programId, "transformation");
-    glm::mat4 transformation = glm::mat4();
+    glm::mat4 model      = glm::rotate(identityMatrix, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 view       = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 projection = glm::perspective(45.0f, (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
 
-    // Seems like GLM applies the new matrix on the right side. So:
-    // tranform = currentTransform * translate/scale.
-    // So that means we should apply the matrices in the opposite order.  So translate then scale.
-    // Final order is:
-    //  1. Object is scaled.
-    //  2. Object is translated
-    transformation = glm::translate(transformation, glm::vec3(0.25f, 0.0f, 0.0f));
-    transformation = glm::scale(transformation, glm::vec3(0.5f, 0.5f, 1.0f));
+    int modelLocation      = glGetUniformLocation(programId, "model");
+    int viewLocation       = glGetUniformLocation(programId, "view");
+    int projectionLocation = glGetUniformLocation(programId, "projection");
 
-    glUniformMatrix4fv(transformationLocation, 1, GL_FALSE, glm::value_ptr(transformation));
+    glUniformMatrix4fv(modelLocation     , 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(viewLocation      , 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
