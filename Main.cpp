@@ -11,12 +11,14 @@
 #include <iostream>
 #include <string>
 
+#include "Camera.hpp"
 #include "Main.hpp"
 
 unsigned int windowWidth  = 800;
 unsigned int windowHeight = 600;
 
 const glm::mat4 identityMatrix = glm::mat4();
+Camera* camera;
 
 // Shader stuff:
 unsigned int vertexShaderId       = 0;
@@ -89,13 +91,14 @@ int main(int argc, char** argv)
     GLenum error = glewInit();
     checkForErrors("Glew sucks");
 
-
     if(error != GLEW_OK)
     {
         std::cout << "Couldn't initialize glew." << std::endl;
         glfwTerminate();
         return -1;
     }
+
+    camera = new Camera();
 
     // Now for some GL code:
     glViewport(0, 0, 800, 600);
@@ -108,6 +111,7 @@ int main(int argc, char** argv)
     initTexture();
 
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glEnable(GL_DEPTH_TEST);
 
     while(glfwWindowShouldClose(window) == false)
     {
@@ -136,10 +140,10 @@ void update(void)
 void draw(void)
 {
     glClearColor(0.5f, 0.5f, 0.75f, 0.0f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(programId);
 
-    glm::mat4 model      = glm::rotate(identityMatrix, glm::radians(-55.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+    glm::mat4 model      = glm::mat4(camera->getCameraTransform());
     glm::mat4 view       = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
     glm::mat4 projection = glm::perspective(45.0f, (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
 
@@ -156,8 +160,11 @@ void draw(void)
     glUniform1i(glGetUniformLocation(programId, "textureOne"), 0);
 
     glBindVertexArray(vaoID);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 39);
     glBindVertexArray(0);
+
     glUseProgram(0);
 }
 
@@ -226,10 +233,52 @@ void initBuffers(void)
     float vertices[] =
     {
          // Positions:          // Tex coords:
-         0.5f,  0.5f,  0.0f,    1.0f, 0.0f,
-         0.5f, -0.5f,  0.0f,    1.0f, 1.0f,
-        -0.5f, -0.5f,  0.0f,    0.0f, 1.0f,
-        -0.5f,  0.5f,  0.0f,    0.0f, 0.0f
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+
+         2.0f,  0.0f,  0.0f,  0.5f, 0.5f,
+         0.0f,  2.0f,  0.0f,  0.5f, 0.5f,
+        -2.0f,  0.0f,  0.0f,  0.5f, 0.5f,
+
     };
 
     // Index Buffer for the vertex buffer above.
@@ -241,14 +290,14 @@ void initBuffers(void)
 
     glGenVertexArrays(1, &vaoID);
     glGenBuffers(1, &vboID);
-    glGenBuffers(1, &indexBufferId);
+    //glGenBuffers(1, &indexBufferId);
     glBindVertexArray(vaoID);
 
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexBuffer), indexBuffer, GL_STATIC_DRAW);
+    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
+    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexBuffer), indexBuffer, GL_STATIC_DRAW);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
