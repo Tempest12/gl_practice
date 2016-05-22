@@ -4,7 +4,7 @@ CC     = g++
 CFLAGS = -Wall -g -std=c++11 
 LINKER = -lglfw -lX11 -ldl -lXi -lXinerama -lXcursor -lXrandr -lXxf86vm -lGLEW -lGLU -lGL -lm -lSOIL -pthread
 
-GLOBJECT = Main.o Vector3f.o Camera.o
+GLOBJECT = Main.o Vector3f.o Camera.o Quaternion.o
 
 EXE = gl
 

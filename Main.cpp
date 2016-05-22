@@ -20,6 +20,14 @@ unsigned int windowHeight = 600;
 const glm::mat4 identityMatrix = glm::mat4();
 Camera* camera;
 
+// Camera Control Keys:
+bool upKeyDown       = false;
+bool downKeyDown     = false;
+bool leftKeyDown     = false;
+bool rightKeyDown    = false;
+bool forwardKeyDown  = false;
+bool backwardKeyDown = false;
+
 // Shader stuff:
 unsigned int vertexShaderId       = 0;
 unsigned int fragmentShaderId     = 0;
@@ -126,15 +134,72 @@ int main(int argc, char** argv)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode)
 {
-    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    switch(key)
     {
-        glfwSetWindowShouldClose(window, true);
+        case GLFW_KEY_ESCAPE:
+            if(action == GLFW_PRESS)
+            {
+                glfwSetWindowShouldClose(window, true);
+            }
+            break;
+
+        case GLFW_KEY_E:
+            upKeyDown = (action == GLFW_PRESS);
+            break;
+
+        case GLFW_KEY_Q:
+            downKeyDown = (action == GLFW_PRESS);
+            break;
+
+        case GLFW_KEY_A:
+            leftKeyDown = (action == GLFW_PRESS);
+            break;
+
+        case GLFW_KEY_D:
+            rightKeyDown = (action == GLFW_PRESS);
+            break;
+
+        case GLFW_KEY_W:
+            forwardKeyDown = (action == GLFW_PRESS);
+            break;
+
+        case GLFW_KEY_S:
+            backwardKeyDown = (action == GLFW_PRESS);
+            break;
     }
+
 }
 
 void update(void)
 {
     glfwPollEvents();
+
+    if(upKeyDown == true)
+    {
+        camera->moveUp(1.0f);
+    }
+    if(downKeyDown == true)
+    {
+        camera->moveDown(1.0f);
+    }
+
+    if(leftKeyDown == true)
+    {
+        camera->moveLeft(1.0f);
+    }
+    if(rightKeyDown == true)
+    {
+        camera->moveRight(1.0f);
+    }
+
+    if(forwardKeyDown == true)
+    {
+        camera->moveForward(1.0f);
+    }
+    if(backwardKeyDown == true)
+    {
+        camera->moveBackward(1.0f);
+    }
 }
 
 void draw(void)

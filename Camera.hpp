@@ -24,6 +24,10 @@ public:
 
     glm::mat4 transform;
 
+    float panSpeed;
+    float runSpeed;
+    float walkSpeed;
+
 protected:
 private:
 
@@ -34,6 +38,16 @@ public:
     ~Camera(void);
 
     glm::mat4 getCameraTransform(void);
+
+    void moveForward(float time);
+    void moveBackward(float time);
+    void moveLeft(float time);
+    void moveRight(float time);
+    void moveUp(float time);
+    void moveDown(float time);
+
+    void panCameraHorizontally(int magnitude);
+    void panCameraVertically  (int magnitude);
 
 protected:
 private:
