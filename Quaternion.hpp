@@ -8,10 +8,10 @@ class Quaternion
 //Variables:
 public:
 
-    float x;
-    float y;
-    float z;
-    float w;
+    float x;// I
+    float y;// J
+    float z;// K
+    float w;// Real number
 
 protected:
 private:
@@ -20,10 +20,15 @@ private:
 public:
 
     Quaternion();
+    Quaternion(float x, float y, float z, float w);
     ~Quaternion();
 
     void add(Quaternion* that);
+    bool equals(Quaternion* that);
+    void multiply(Quaternion* that);
     void normalize(void);
+    void print(void);
+
 
 protected:
 private:
