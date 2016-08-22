@@ -1,8 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include <SOIL/SOIL.h>
-
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
@@ -13,12 +11,14 @@
 
 #include "Camera.hpp"
 #include "Main.hpp"
+#include "PulseCounterf.hpp"
 
 unsigned int windowWidth  = 800;
 unsigned int windowHeight = 600;
 
 const glm::mat4 identityMatrix = glm::mat4();
 Camera* camera;
+PulseCounterf* pulse;
 
 // Camera Control Keys:
 bool upKeyDown       = false;
@@ -36,26 +36,24 @@ unsigned int programId            = 0;
 // Buffers:
 unsigned int vboID                = 0;
 unsigned int vaoID                = 0;
-unsigned int indexBufferId        = 0;
 
 // Texture stuff:
-unsigned int textureId            = 0;
 
 std::string vertexShaderSource = 
 "#version 330 core\n"\
 ""\
-"layout (location = 0) in vec3 position;\n"\
-"layout (location = 1) in vec2 texCoordIn;\n"\
+"layout (location = 0) in  vec3 position;\n"\
+"layout (location = 1) in  vec2 texCoordIn;\n"\
 ""\
 "out vec2 texCoord;\n"
 ""\
-"uniform mat4 model;\n"\
-"uniform mat4 view;\n"\
-"uniform mat4 projection;\n"\
+"uniform mat4 vs_model;\n"\
+"uniform mat4 vs_view;\n"\
+"uniform mat4 vs_projection;\n"\
 ""\
 "void main()\n"\
 "{\n"\
-"    gl_Position = projection * view * model * vec4(position.x  , position.y  , position.z, 1.0f);\n"\
+"    gl_Position = vs_projection * vs_view * vs_model * vec4(position.x  , position.y  , position.z, 1.0f);\n"\
 "    texCoord    = vec2(texCoordIn.x, texCoordIn.y);\n"\
 "}\n";
 
@@ -64,13 +62,17 @@ std::string fragmentShaderSource =
 ""\
 "in vec2 texCoord;\n"\
 ""\
-"uniform sampler2D textureOne;"\
-""\
 "out vec4 color;\n"\
+""\
+"uniform float fs_scalar;\n"\
 ""\
 "void main()\n"\
 "{\n"\
-"   color = texture(textureOne, texCoord);\n"\
+"   float threshold = 1.0f;\n"\
+"   float distance = sqrt((texCoord.x * texCoord.x) + (texCoord.y * texCoord.y));\n"\
+"   float result = distance - threshold;\n"\
+"   result *= fs_scalar;\n"\
+"   color = vec4(result, result, result, result);\n"\
 "}\n";
 
 int main(int argc, char** argv)
@@ -107,19 +109,27 @@ int main(int argc, char** argv)
     }
 
     camera = new Camera();
+    pulse = new PulseCounterf(1.5f, 2.65f, 0.015f);
 
     // Now for some GL code:
     glViewport(0, 0, 800, 600);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
     checkForErrors("Set the viewport");
 
     initBuffers();
     initShader();
-    initTexture();
 
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glPolygonMode(GL_FRONT, GL_FILL);
+
+    //Depth:
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
+
+    //Alpha:
+    glEnable(GL_ALPHA_TEST);
+    glAlphaFunc(GL_GREATER, 0.75f);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     while(glfwWindowShouldClose(window) == false)
     {
@@ -200,11 +210,13 @@ void update(void)
     {
         camera->moveBackward(1.0f);
     }
+
+    pulse->pulse();
 }
 
 void draw(void)
 {
-    glClearColor(0.5f, 0.5f, 0.75f, 0.0f);
+    glClearColor(0.0f, 0.2f, 0.35f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(programId);
 
@@ -212,22 +224,18 @@ void draw(void)
     glm::mat4 view       = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
     glm::mat4 projection = glm::perspective(45.0f, (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
 
-    int modelLocation      = glGetUniformLocation(programId, "model");
-    int viewLocation       = glGetUniformLocation(programId, "view");
-    int projectionLocation = glGetUniformLocation(programId, "projection");
+    int vs_modelLocation      = glGetUniformLocation(programId, "vs_model");
+    int vs_viewLocation       = glGetUniformLocation(programId, "vs_view");
+    int vs_projectionLocation = glGetUniformLocation(programId, "vs_projection");
+    int fs_scalarLocation     = glGetUniformLocation(programId, "fs_scalar");
 
-    glUniformMatrix4fv(modelLocation     , 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(viewLocation      , 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glUniform1i(glGetUniformLocation(programId, "textureOne"), 0);
+    glUniformMatrix4fv(vs_modelLocation     , 1, GL_FALSE, glm::value_ptr(model));
+    glUniformMatrix4fv(vs_viewLocation      , 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(vs_projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniform1f(fs_scalarLocation, pulse->counter);
 
     glBindVertexArray(vaoID);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-    //glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glDrawArrays(GL_TRIANGLES, 0, 39);
+    glDrawArrays(GL_TRIANGLES, 0, 12);
     glBindVertexArray(0);
 
     glUseProgram(0);
@@ -294,81 +302,43 @@ unsigned int compileShader(std::string* source, unsigned int type)
 
 void initBuffers(void)
 {
+    float maxx = 1.0f;
+    float star = 1.0f;
+    float size = 1.5f;
+
     // Vertex Buffer:
     float vertices[] =
     {
          // Positions:          // Tex coords:
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.0f,  size,  0.0f,  0.0f, star,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,
+        -size,  0.0f,  0.0f,  star, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,
+        -size,  0.0f,  0.0f,  star, 0.0f,
+         0.0f, -size,  0.0f,  0.0f, star,
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         size,  0.0f,  0.0f,  star, 0.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,
+         0.0f, -size,  0.0f,  0.0f, star,
 
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-
-         2.0f,  0.0f,  0.0f,  0.5f, 0.5f,
-         0.0f,  2.0f,  0.0f,  0.5f, 0.5f,
-        -2.0f,  0.0f,  0.0f,  0.5f, 0.5f,
-
-    };
-
-    // Index Buffer for the vertex buffer above.
-    unsigned int indexBuffer[] = 
-    {
-        0, 1, 3,
-        1, 2, 3
+         size,  0.0f,  0.0f,  star, 0.0f,
+         0.0f,  size,  0.0f,  0.0f, star,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,
     };
 
     glGenVertexArrays(1, &vaoID);
     glGenBuffers(1, &vboID);
-    //glGenBuffers(1, &indexBufferId);
     glBindVertexArray(vaoID);
 
     glBindBuffer(GL_ARRAY_BUFFER, vboID);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
-    //glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBufferId);
-    //glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indexBuffer), indexBuffer, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
@@ -382,27 +352,6 @@ void initShader(void)
 
     glDeleteShader(vertexShaderId);
     glDeleteShader(fragmentShaderId);
-}
-
-void initTexture(void)
-{
-    glGenTextures(1, &textureId);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S    , GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T    , GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    int width  = 0;
-    int height = 0;
-    unsigned char* pixels = SOIL_load_image("smiley.png", &width, &height, 0, SOIL_LOAD_RGB);
-
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    SOIL_free_image_data(pixels);
-    glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void checkForErrors(const std::string& lastCommandName)
