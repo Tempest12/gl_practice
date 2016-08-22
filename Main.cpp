@@ -44,8 +44,10 @@ std::string vertexShaderSource =
 ""\
 "layout (location = 0) in  vec3 position;\n"\
 "layout (location = 1) in  vec2 texCoordIn;\n"\
+"layout (location = 2) in  vec4 colorIn;\n"\
 ""\
-"out vec2 texCoord;\n"
+"out vec2 pass_texCoord;\n"\
+"out vec4 pass_color;\n"\
 ""\
 "uniform mat4 vs_model;\n"\
 "uniform mat4 vs_view;\n"\
@@ -53,26 +55,28 @@ std::string vertexShaderSource =
 ""\
 "void main()\n"\
 "{\n"\
-"    gl_Position = vs_projection * vs_view * vs_model * vec4(position.x  , position.y  , position.z, 1.0f);\n"\
-"    texCoord    = vec2(texCoordIn.x, texCoordIn.y);\n"\
+"    gl_Position   = vs_projection * vs_view * vs_model * vec4(position.x  , position.y  , position.z, 1.0f);\n"\
+"    pass_texCoord = texCoordIn;\n"\
+"    pass_color    = colorIn;\n"\
 "}\n";
 
 std::string fragmentShaderSource =
 "#version 330 core\n"\
 ""\
-"in vec2 texCoord;\n"\
+"in vec2 pass_texCoord;\n"\
+"in vec4 pass_color;\n"\
 ""\
-"out vec4 color;\n"\
+"out vec4 colorOut;\n"\
 ""\
 "uniform float fs_scalar;\n"\
 ""\
 "void main()\n"\
 "{\n"\
 "   float threshold = 1.0f;\n"\
-"   float distance = sqrt((texCoord.x * texCoord.x) + (texCoord.y * texCoord.y));\n"\
+"   float distance = sqrt((pass_texCoord.x * pass_texCoord.x) + (pass_texCoord.y * pass_texCoord.y));\n"\
 "   float result = distance - threshold;\n"\
 "   result *= fs_scalar;\n"\
-"   color = vec4(result, result, result, result);\n"\
+"   colorOut = vec4(result * pass_color.r, result * pass_color.g, result * pass_color.b, result * pass_color.a);\n"\
 "}\n";
 
 int main(int argc, char** argv)
@@ -109,7 +113,7 @@ int main(int argc, char** argv)
     }
 
     camera = new Camera();
-    pulse = new PulseCounterf(1.5f, 2.65f, 0.015f);
+    pulse = new PulseCounterf(1.0f, 7.5f, 0.1f);
 
     // Now for some GL code:
     glViewport(0, 0, 800, 600);
@@ -216,7 +220,7 @@ void update(void)
 
 void draw(void)
 {
-    glClearColor(0.0f, 0.2f, 0.35f, 1.0f);
+    glClearColor(0.05f, 0.0f, 0.20f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(programId);
 
@@ -309,22 +313,22 @@ void initBuffers(void)
     // Vertex Buffer:
     float vertices[] =
     {
-         // Positions:          // Tex coords:
-         0.0f,  size,  0.0f,  0.0f, star,
-         0.0f,  0.0f,  0.0f,  maxx, maxx,
-        -size,  0.0f,  0.0f,  star, 0.0f,
+         // Positions:        Tex coords:  Color:
+         0.0f,  size,  0.0f,  0.0f, star,  0.0f , 1.0f , 1.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f , 0.75f, 1.0f,
+        -size,  0.0f,  0.0f,  star, 0.0f,  1.0f , 1.0f , 0.0f , 1.0f,
 
-         0.0f,  0.0f,  0.0f,  maxx, maxx,
-        -size,  0.0f,  0.0f,  star, 0.0f,
-         0.0f, -size,  0.0f,  0.0f, star,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f, 0.75f, 1.0f,
+        -size,  0.0f,  0.0f,  star, 0.0f,  1.0f , 1.0f , 0.0f , 1.0f,
+         0.0f, -size,  0.0f,  0.0f, star,  0.0f , 1.0f , 0.0f , 1.0f,
 
-         size,  0.0f,  0.0f,  star, 0.0f,
-         0.0f,  0.0f,  0.0f,  maxx, maxx,
-         0.0f, -size,  0.0f,  0.0f, star,
+         size,  0.0f,  0.0f,  star, 0.0f,  0.0f , 0.0f , 1.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f , 0.75f, 1.0f,
+         0.0f, -size,  0.0f,  0.0f, star,  0.0f , 1.0f , 0.0f , 1.0f,
 
-         size,  0.0f,  0.0f,  star, 0.0f,
-         0.0f,  size,  0.0f,  0.0f, star,
-         0.0f,  0.0f,  0.0f,  maxx, maxx,
+         size,  0.0f,  0.0f,  star, 0.0f,  0.0f , 0.0f , 1.0f , 1.0f,
+         0.0f,  size,  0.0f,  0.0f, star,  0.0f , 1.0f , 1.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f , 0.75f, 1.0f,
     };
 
     glGenVertexArrays(1, &vaoID);
@@ -335,10 +339,13 @@ void initBuffers(void)
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)0);
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(3 * sizeof(float)));
+
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, 9 * sizeof(float), (void*)(5 * sizeof(float)));
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
