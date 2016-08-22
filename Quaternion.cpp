@@ -63,3 +63,11 @@ void Quaternion::print(void)
     std::cout << "Z: " << this->z << " ";
     std::cout << "W: " << this->w << std::endl;
 }
+
+void Quaternion::subtract(Quaternion* that)
+{
+    this->x -= that->x;
+    this->y -= that->y;
+    this->z -= that->z;
+    this->w -= that->w;
+}

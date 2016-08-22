@@ -28,7 +28,7 @@ public:
     void multiply(Quaternion* that);
     void normalize(void);
     void print(void);
-
+    void subtract(Quaternion* that);
 
 protected:
 private:
