@@ -2,8 +2,8 @@
 #define _CAMERA_HPP
 
 #include "glm/glm.hpp"
-#include "glm/gtc/quaternion.hpp"
 
+//Forward declarations:
 class Vector3f;
 
 class Camera
@@ -20,9 +20,7 @@ public:
     Vector3f* up;
     Vector3f* down;
 
-    glm::fquat* rotation;
-
-    glm::mat4 transform;
+    glm::mat4* transform;
 
     float panSpeed;
     float runSpeed;
@@ -37,7 +35,7 @@ public:
     Camera(void);
     ~Camera(void);
 
-    glm::mat4 getCameraTransform(void);
+    glm::mat4* getCameraTransform(void);
 
     void moveForward(float time);
     void moveBackward(float time);

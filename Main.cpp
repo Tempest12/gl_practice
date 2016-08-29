@@ -12,13 +12,15 @@
 #include "Camera.hpp"
 #include "Main.hpp"
 #include "PulseCounterf.hpp"
-
+#include "Quaternion.hpp"
 unsigned int windowWidth  = 800;
 unsigned int windowHeight = 600;
 
 const glm::mat4 identityMatrix = glm::mat4();
 Camera* camera;
 PulseCounterf* pulse;
+float rotationAngle = 0.0f;
+Quaternion* quaternion = NULL;
 
 // Camera Control Keys:
 bool upKeyDown       = false;
@@ -113,7 +115,8 @@ int main(int argc, char** argv)
     }
 
     camera = new Camera();
-    pulse = new PulseCounterf(1.0f, 7.5f, 0.1f);
+    pulse = new PulseCounterf(2.0f, 2.25f, 0.0001f);
+    quaternion = new Quaternion(-7.0f, -7.0f, -7.0f, -7.0f);
 
     // Now for some GL code:
     glViewport(0, 0, 800, 600);
@@ -216,6 +219,9 @@ void update(void)
     }
 
     pulse->pulse();
+    rotationAngle += 0.1f;
+
+    quaternion->setFromEulerAngles(rotationAngle, 0.0f, 0.0f);
 }
 
 void draw(void)
@@ -224,8 +230,9 @@ void draw(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(programId);
 
-    glm::mat4 model      = glm::mat4(camera->getCameraTransform());
-    glm::mat4 view       = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 rotation   = *quaternion->getRotationMatrix();
+    glm::mat4 model      = *camera->getCameraTransform();
+    glm::mat4 view       = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f)) * rotation;
     glm::mat4 projection = glm::perspective(45.0f, (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
 
     int vs_modelLocation      = glGetUniformLocation(programId, "vs_model");
@@ -306,7 +313,7 @@ unsigned int compileShader(std::string* source, unsigned int type)
 
 void initBuffers(void)
 {
-    float maxx = 1.0f;
+    float maxx = 1.25f;
     float star = 1.0f;
     float size = 1.5f;
 
@@ -314,21 +321,21 @@ void initBuffers(void)
     float vertices[] =
     {
          // Positions:        Tex coords:  Color:
-         0.0f,  size,  0.0f,  0.0f, star,  0.0f , 1.0f , 1.0f , 1.0f,
-         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f , 0.75f, 1.0f,
-        -size,  0.0f,  0.0f,  star, 0.0f,  1.0f , 1.0f , 0.0f , 1.0f,
+         0.0f,  size,  0.0f,  0.0f, star,  0.0f , 0.0f , 0.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  1.0f , 1.0f , 1.0f , 1.0f,
+        -size,  0.0f,  0.0f,  star, 0.0f,  0.0f , 0.75f, 0.0f , 1.0f,
 
-         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f, 0.75f, 1.0f,
-        -size,  0.0f,  0.0f,  star, 0.0f,  1.0f , 1.0f , 0.0f , 1.0f,
-         0.0f, -size,  0.0f,  0.0f, star,  0.0f , 1.0f , 0.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  1.0f , 1.0f , 1.0f , 1.0f,
+        -size,  0.0f,  0.0f,  star, 0.0f,  0.0f , 0.75f, 0.0f , 1.0f,
+         0.0f, -size,  0.0f,  0.0f, star,  0.0f , 0.75f, 1.0f , 1.0f,
 
-         size,  0.0f,  0.0f,  star, 0.0f,  0.0f , 0.0f , 1.0f , 1.0f,
-         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f , 0.75f, 1.0f,
-         0.0f, -size,  0.0f,  0.0f, star,  0.0f , 1.0f , 0.0f , 1.0f,
+         size,  0.0f,  0.0f,  star, 0.0f,  1.0f , 0.75f, 1.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  1.0f , 1.0f , 1.0f , 1.0f,
+         0.0f, -size,  0.0f,  0.0f, star,  0.0f , 0.75f, 1.0f , 1.0f,
 
-         size,  0.0f,  0.0f,  star, 0.0f,  0.0f , 0.0f , 1.0f , 1.0f,
-         0.0f,  size,  0.0f,  0.0f, star,  0.0f , 1.0f , 1.0f , 1.0f,
-         0.0f,  0.0f,  0.0f,  maxx, maxx,  0.5f , 1.0f , 0.75f, 1.0f,
+         size,  0.0f,  0.0f,  star, 0.0f,  1.0f , 0.75f, 1.0f , 1.0f,
+         0.0f,  size,  0.0f,  0.0f, star,  0.0f , 0.0f , 0.0f , 1.0f,
+         0.0f,  0.0f,  0.0f,  maxx, maxx,  1.0f , 1.0f , 1.0f , 1.0f,
     };
 
     glGenVertexArrays(1, &vaoID);

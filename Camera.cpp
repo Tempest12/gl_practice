@@ -8,7 +8,7 @@
 
 Camera::Camera(void)
 {
-    this->position  = new Vector3f(0.0f);
+    this->position  = new Vector3f(0.0f, 0.0f, 0.0f);
 
     this->forward    = new Vector3f( 0.0f,  0.0f,  1.0f);
     this->backward  = new Vector3f( 0.0f,  0.0f, -1.0f);
@@ -19,8 +19,7 @@ Camera::Camera(void)
     this->up        = new Vector3f( 0.0f,  1.0f,  0.0f);
     this->down      = new Vector3f( 0.0f, -1.0f,  0.0f);
 
-    this->transform = glm::mat4();
-    this->rotation = new glm::fquat();
+    this->transform = new glm::mat4();
 
     this->panSpeed = 0.55f;
 
@@ -40,12 +39,12 @@ Camera::~Camera(void)
     delete down;
 }
 
-glm::mat4 Camera::getCameraTransform(void)
+glm::mat4* Camera::getCameraTransform(void)
 {
     Vector3f focalPoint = Vector3f(this->position);
     focalPoint.add(this->forward);
 
-    this->transform = glm::lookAt(this->position->toGLM(),
+    *this->transform = glm::lookAt(this->position->toGLM(),
                                   focalPoint.toGLM(),
                                   this->up->toGLM());
 
@@ -96,11 +95,8 @@ void Camera::moveDown(float time)
 
 void Camera::panCameraHorizontally(int magnitude)
 {
-    glm::vec3 rotateAroundY = glm::vec3(0.0f, 1.0f, 0.0f);
-    float panInDegrees = this->panSpeed * magnitude;
 }
 
 void Camera::panCameraVertically(int magnitude)
 {
-
 }
