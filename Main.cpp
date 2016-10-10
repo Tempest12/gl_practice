@@ -21,6 +21,7 @@ Camera* camera;
 PulseCounterf* pulse;
 float rotationAngle = 0.0f;
 Quaternion* quaternion = NULL;
+Quaternion* turn = NULL;
 
 // Camera Control Keys:
 bool upKeyDown       = false;
@@ -117,6 +118,9 @@ int main(int argc, char** argv)
     camera = new Camera();
     pulse = new PulseCounterf(2.0f, 2.25f, 0.0001f);
     quaternion = new Quaternion(-7.0f, -7.0f, -7.0f, -7.0f);
+    quaternion->setFromEulerAngles(0.0f, 0.0f, 0.0f);
+    turn       = new Quaternion(-7.0f, -7.0f, -7.0f, -7.0f);
+    turn->setFromEulerAngles(90.0f, 0.0f, 0.0f);
 
     // Now for some GL code:
     glViewport(0, 0, 800, 600);
@@ -157,6 +161,24 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
             if(action == GLFW_PRESS)
             {
                 glfwSetWindowShouldClose(window, true);
+            }
+            break;
+
+        case GLFW_KEY_SPACE:
+            if(action == GLFW_PRESS)
+            {
+                std::cout << "Adding..." << std::endl;
+
+                std::cout << "Quaternion: ";
+                quaternion->print();
+                std::cout << "Turn: ";
+                turn->print();
+
+                //quaternion->addAndNormalize(turn);
+                quaternion->multiply(turn);
+
+                std::cout << "Result: ";
+                quaternion->print();
             }
             break;
 
@@ -219,9 +241,6 @@ void update(void)
     }
 
     pulse->pulse();
-    rotationAngle += 0.1f;
-
-    quaternion->setFromEulerAngles(rotationAngle, 0.0f, 0.0f);
 }
 
 void draw(void)

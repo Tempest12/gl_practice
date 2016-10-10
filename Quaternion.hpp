@@ -25,16 +25,23 @@ private:
 public:
 
     Quaternion(float x, float y, float z, float w);
+    Quaternion(Quaternion* that);
     ~Quaternion();
 
     void       add(Quaternion* that);
+    void       addAndNormalize(Quaternion* that);
+    void       conjugate(void);
     bool       equals(Quaternion* that);
     glm::mat4* getRotationMatrix(void);
     void       multiply(Quaternion* that);
     void       normalize(void);
     void       print(void);
+    void       scale(float scale);
     void       setFromEulerAngles(float xRotation, float yRotation, float zRotation);
     void       subtract(Quaternion* that);
+
+    //Static Stuff:
+    static Quaternion getConjugateOf(Quaternion* that);
 
 protected:
 private:

@@ -26,6 +26,21 @@ void Quaternion::add(Quaternion* that)
     this->w += that->w;
 }
 
+void Quaternion::addAndNormalize(Quaternion* that)
+{
+    this->add(that);
+    this->normalize();
+}
+
+void Quaternion::conjugate(void)
+{
+    // Conjugation just means we invert(multiply by -1.0f) the imanginary coefficents: (The scalar value is unchagned.)
+
+    this->x *= -1.0f;
+    this->y *= -1.0f;
+    this->z *= -1.0f;
+}
+
 bool Quaternion::equals(Quaternion* that)
 {
     return (this->x == that->x) && (this->y == that->y) && (this->z == that->z) && (this->w = that->w);
@@ -98,6 +113,14 @@ void Quaternion::print(void)
     std::cout << "W: " << this->w << std::endl;
 }
 
+void Quaternion::scale(float scalar)
+{
+    this->x *= scalar;
+    this->y *= scalar;
+    this->z *= scalar;
+    this->w *= scalar;
+}
+
 void Quaternion::setFromEulerAngles(float xRotation, float yRotation, float zRotation)
 {
     float cx = MathUtil::degreeCos(xRotation / 2.0f);
@@ -120,4 +143,12 @@ void Quaternion::subtract(Quaternion* that)
     this->y -= that->y;
     this->z -= that->z;
     this->w -= that->w;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Static Stuff:
+////////////////////////////////////////////////////////////////////////////////
+Quaternion Quaternion::getConjugateOf(Quaternion* that)
+{
+    return Quaternion(that->x * -1.0f, that->y * -1.0f, that->z * -1.0f, that->w);
 }
