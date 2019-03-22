@@ -165,9 +165,9 @@ void Vector3f::subtract(Vector3f* that)
         this->z -= that->z;
 }
 
-glm::vec3 Vector3f::toGLM(void)
+glm::tvec3<float> Vector3f::toGLM(void)
 {
-    return glm::vec3(this->x, this->y, this->z);
+    return glm::tvec3<float>(this->x, this->y, this->z);
 }
 
 void Vector3f::zeroOut(void)

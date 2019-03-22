@@ -57,7 +57,7 @@ public:
 
     void subtract(Vector3f* that);
 
-    glm::vec3 toGLM(void);
+    glm::tvec3<float> toGLM(void);
 
     void zeroOut(void);
 
