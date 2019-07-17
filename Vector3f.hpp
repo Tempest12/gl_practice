@@ -4,8 +4,6 @@
 #include <iostream>
 #include <math.h>
 
-#include "glm/detail/type_vec3.hpp"
-
 class Vector3f
 {
 //Variables
@@ -57,7 +55,7 @@ public:
 
     void subtract(Vector3f* that);
 
-    glm::tvec3<float> toGLM(void);
+    //glm::tvec3<float> toGLM(void);
 
     void zeroOut(void);
 

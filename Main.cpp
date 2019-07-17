@@ -1,10 +1,6 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/type_ptr.hpp"
-
 #include <cstring>
 #include <iostream>
 #include <string>
@@ -16,7 +12,6 @@
 unsigned int windowWidth  = 800;
 unsigned int windowHeight = 600;
 
-const glm::mat4 identityMatrix = glm::mat4();
 Camera* camera;
 PulseCounterf* pulse;
 float rotationAngle = 0.0f;
@@ -249,19 +244,20 @@ void draw(void)
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glUseProgram(programId);
 
-    glm::mat4 rotation   = *quaternion->getRotationMatrix();
-    glm::mat4 model      = *camera->getCameraTransform();
-    glm::mat4 view       = glm::translate(identityMatrix, glm::vec3(0.0f, 0.0f, -3.0f)) * rotation;
-    glm::mat4 projection = glm::perspective(45.0f, (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
+    float identity[16] =
+    { 1.0f, 0.0f, 0.0f, 0.0f,
+      0.0f, 1.0f, 0.0f, 0.0f,
+      0.0f, 0.0f, 1.0f, 0.0f,
+      0.0f, 0.0f, 0.0f, 1.0f};
 
     int vs_modelLocation      = glGetUniformLocation(programId, "vs_model");
     int vs_viewLocation       = glGetUniformLocation(programId, "vs_view");
     int vs_projectionLocation = glGetUniformLocation(programId, "vs_projection");
     int fs_scalarLocation     = glGetUniformLocation(programId, "fs_scalar");
 
-    glUniformMatrix4fv(vs_modelLocation     , 1, GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(vs_viewLocation      , 1, GL_FALSE, glm::value_ptr(view));
-    glUniformMatrix4fv(vs_projectionLocation, 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(vs_modelLocation     , 1, GL_FALSE, identity);
+    glUniformMatrix4fv(vs_viewLocation      , 1, GL_FALSE, identity);
+    glUniformMatrix4fv(vs_projectionLocation, 1, GL_FALSE, identity);
     glUniform1f(fs_scalarLocation, pulse->counter);
 
     glBindVertexArray(vaoID);

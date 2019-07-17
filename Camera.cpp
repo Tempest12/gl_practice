@@ -1,17 +1,11 @@
-#include "glm/glm.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/gtc/quaternion.hpp"
-#define GLM_ENABLE_EXPERIMENTAL
-#include "glm/gtx/quaternion.hpp"
-
 #include "Camera.hpp"
 #include "Vector3f.hpp"
 
 Camera::Camera(void)
 {
-    this->position  = new Vector3f(0.0f, 0.0f, 0.0f);
+    this->position  = new Vector3f( 0.0f,  0.0f,  0.0f);
 
-    this->forward    = new Vector3f( 0.0f,  0.0f,  1.0f);
+    this->forward   = new Vector3f( 0.0f,  0.0f,  1.0f);
     this->backward  = new Vector3f( 0.0f,  0.0f, -1.0f);
 
     this->right     = new Vector3f(-1.0f,  0.0f,  0.0f);
@@ -20,11 +14,11 @@ Camera::Camera(void)
     this->up        = new Vector3f( 0.0f,  1.0f,  0.0f);
     this->down      = new Vector3f( 0.0f, -1.0f,  0.0f);
 
-    this->transform = new glm::mat4();
+    //this->transform = new glm::mat4();
 
-    this->panSpeed = 0.55f;
+    this->panSpeed  = 0.55f;
 
-    this->runSpeed = 4.5f;
+    this->runSpeed  = 4.5f;
     this->walkSpeed = 0.35f;
 }
 
@@ -40,7 +34,7 @@ Camera::~Camera(void)
     delete down;
 }
 
-glm::mat4* Camera::getCameraTransform(void)
+/*glm::mat4* Camera::getCameraTransform(void)
 {
     Vector3f focalPoint = Vector3f(this->position);
     focalPoint.add(this->forward);
@@ -50,7 +44,7 @@ glm::mat4* Camera::getCameraTransform(void)
                                   this->up->toGLM());
 
     return this->transform;
-}
+}*/
 
 void Camera::moveForward(float time)
 {

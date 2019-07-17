@@ -3,8 +3,6 @@
 
 #include <math.h>
 
-#include "glm/detail/type_vec3.hpp"
-
 #include "Vector3f.hpp"
 
 //Constructors
@@ -153,21 +151,16 @@ void Vector3f::normalize(void)
 
 void Vector3f::scale(float scalar)
 {
-        x *= scalar;
-        y *= scalar;
-        z *= scalar;
+    x *= scalar;
+    y *= scalar;
+    z *= scalar;
 }  
 
 void Vector3f::subtract(Vector3f* that)
 {        
-        this->x -= that->x;
-        this->y -= that->y;
-        this->z -= that->z;
-}
-
-glm::tvec3<float> Vector3f::toGLM(void)
-{
-    return glm::tvec3<float>(this->x, this->y, this->z);
+    this->x -= that->x;
+    this->y -= that->y;
+    this->z -= that->z;
 }
 
 void Vector3f::zeroOut(void)

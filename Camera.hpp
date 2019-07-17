@@ -20,8 +20,6 @@ public:
     Vector3f* up;
     Vector3f* down;
 
-    glm::mat4* transform;
-
     float panSpeed;
     float runSpeed;
     float walkSpeed;
@@ -34,8 +32,6 @@ public:
 
     Camera(void);
     ~Camera(void);
-
-    glm::mat4* getCameraTransform(void);
 
     void moveForward(float time);
     void moveBackward(float time);
